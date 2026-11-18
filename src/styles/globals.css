@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tokens from DESIGN.md. RGB triplets so Tailwind can apply opacity. */
+:root {
+  --ink: 17 32 43; --paper: 246 248 247; --surface: 255 255 255; --line: 221 227 225; --slate: 91 107 118;
+  --ledger: 15 123 95; --on-ledger: 255 255 255; --owed: 199 125 0; --owed-text: 138 86 0; --brick: 179 64 47;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: 232 238 240; --paper: 14 21 25; --surface: 22 32 42; --line: 38 52 61; --slate: 154 170 180;
+    --ledger: 61 190 151; --on-ledger: 14 21 25; --owed: 224 160 48; --owed-text: 224 160 48; --brick: 229 122 104;
+  }
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: rgb(var(--paper)); color: rgb(var(--ink));
+  font-family: var(--font-body), var(--font-ethiopic), system-ui, sans-serif;
+  font-variant-numeric: tabular-nums; line-height: 1.4;
+  padding-top: env(safe-area-inset-top, 0px);
+  overscroll-behavior-y: none;
+}
+:lang(am) body, body:lang(am) { font-size: 17px; line-height: 1.5; }
+h1, h2, h3 { font-family: var(--font-heading), var(--font-ethiopic), system-ui, sans-serif; letter-spacing: -0.01em; line-height: 1.2; }
+.num { font-variant-numeric: tabular-nums; }
+
+:focus-visible { outline: 2px solid rgb(var(--ledger)); outline-offset: 2px; }
+
+/* Skeleton: same shapes as the real content, static for reduced motion. */
+.skeleton { background: rgb(var(--line)); border-radius: 8px; animation: sk 1.4s ease-in-out infinite; }
+@keyframes sk { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+@keyframes sheet-in { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.sheet-in { animation: sheet-in 160ms ease-out; }
+.fade-in { animation: fade-in 120ms ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  .skeleton { animation: none; }
+}

@@ -1,0 +1,122 @@
+/** English is the source of truth for message keys. am.ts and om.ts must define every key (tested). */
+export const en = {
+  'app.name': 'Shop Ledger',
+  'common.save': 'Save', 'common.cancel': 'Cancel', 'common.confirm': 'Confirm', 'common.back': 'Back',
+  'common.next': 'Next', 'common.done': 'Done', 'common.retry': 'Try again', 'common.close': 'Close',
+  'common.add': 'Add', 'common.edit': 'Edit', 'common.search': 'Search', 'common.optional': 'Optional',
+  'common.today': 'Today', 'common.week': 'This week', 'common.month': 'This month', 'common.see_all': 'See all',
+  'common.copy': 'Copy', 'common.copied': 'Copied', 'common.language': 'Language', 'common.skip': 'Skip',
+
+  'nav.home': 'Home', 'nav.products': 'Products', 'nav.sell': 'Sell', 'nav.customers': 'Customers', 'nav.more': 'More',
+
+  'status.offline': 'Offline. Changes are saved on this phone.',
+  'status.saved_local': 'Saved on this phone',
+  'status.syncing': 'Syncing',
+  'status.synced': 'All changes saved',
+  'status.failed': '{n} need attention',
+
+  'auth.sign_in': 'Sign in', 'auth.sign_up': 'Create account', 'auth.email': 'Email', 'auth.password': 'Password',
+  'auth.name': 'Your name', 'auth.hint_password': 'At least 10 characters',
+  'auth.to_sign_up': 'New here? Create an account', 'auth.to_sign_in': 'Have an account? Sign in',
+  'auth.check_email': 'Check your email to confirm your account, then sign in.',
+  'auth.tagline': 'Stock, sales and debts, always up to date.',
+  'auth.failed': 'Email or password is not right.',
+
+  'ob.step': 'Step {n} of 3', 'ob.shop_title': 'Name your shop', 'ob.shop_name': 'Shop name',
+  'ob.products_title': 'Add your first products', 'ob.use_samples': 'Use sample items',
+  'ob.samples_hint': 'You can change or remove them later.', 'ob.add_row': 'Add another',
+  'ob.stock_title': 'How much do you have in stock?', 'ob.ready_title': "You're ready",
+  'ob.ready_body': 'Record your first sale.', 'ob.ready_cta': 'Record first sale',
+  'ob.sample.sugar': 'Sugar', 'ob.sample.oil': 'Cooking oil', 'ob.sample.soap': 'Soap', 'ob.sample.bread': 'Bread',
+
+  'home.today': 'Today', 'home.sales': 'Sales', 'home.cash_in': 'Cash in', 'home.owed': 'Owed to you',
+  'home.profit': 'Profit', 'home.low_title': 'Running low', 'home.debt_title': 'Who owes you',
+  'home.low_none': 'Stock levels look fine.', 'home.debt_none': 'Nobody owes you right now.',
+  'home.low_alert': '{n} items may run out soon', 'home.debt_alert': '{n} customers owe you {amount}',
+  'home.sales_count': '{n} sales',
+
+  'prod.title': 'Products', 'prod.search': 'Search products', 'prod.add': 'Add product', 'prod.edit': 'Edit product',
+  'prod.name': 'Name', 'prod.unit': 'Unit', 'prod.price': 'Selling price', 'prod.cost': 'Cost price',
+  'prod.stock': 'In stock', 'prod.opening': 'Starting stock', 'prod.reorder': 'Warn me when below',
+  'prod.restock': 'Restock', 'prod.qty': 'Quantity', 'prod.cost_unit': 'Cost per unit',
+  'prod.adjust': 'Correct stock', 'prod.reason': 'Reason', 'prod.low': 'Low', 'prod.out': 'Out',
+  'prod.empty': 'No products yet', 'prod.empty_cta': 'Add your first product', 'prod.archive': 'Archive product',
+  'prod.saved': 'Product saved', 'prod.stock_added': 'Stock added', 'prod.stock_fixed': 'Stock corrected',
+  'prod.change_hint': 'Use a negative number to remove stock (for example -3).',
+  'unit.pcs': 'pcs', 'unit.kg': 'kg', 'unit.l': 'litre', 'unit.pack': 'pack', 'unit.box': 'box',
+
+  'sell.title': 'New sale', 'sell.search': 'Search or tap a product', 'sell.empty': 'Tap a product to add it',
+  'sell.items': '{n} items', 'sell.charge': 'Charge {amount}', 'sell.total': 'Total', 'sell.payment': 'Payment',
+  'sell.cash': 'Cash', 'sell.mobile_money': 'Mobile money', 'sell.bank': 'Bank', 'sell.credit': 'On credit',
+  'sell.paid_now': 'Paid now', 'sell.on_credit': 'Goes on credit', 'sell.customer': 'Customer',
+  'sell.choose_customer': 'Choose customer', 'sell.new_customer': 'New customer',
+  'sell.balance': 'Current balance', 'sell.limit': 'Credit limit', 'sell.confirm': 'Confirm sale',
+  'sell.done': 'Sale recorded', 'sell.new': 'New sale', 'sell.share': 'Share receipt',
+  'sell.low_left': 'Only {n} left', 'sell.remove': 'Remove', 'sell.no_products': 'Add products first',
+  'receipt.title': 'Receipt', 'receipt.thanks': 'Thank you',
+
+  'cust.title': 'Customers', 'cust.search': 'Search customers', 'cust.add': 'Add customer', 'cust.name': 'Name',
+  'cust.phone': 'Phone (optional)', 'cust.limit': 'Credit limit (optional)', 'cust.owes': 'Owes',
+  'cust.settled': 'Settled', 'cust.balance': 'Balance', 'cust.pay': 'Record payment', 'cust.amount': 'Amount',
+  'cust.full': 'Full balance', 'cust.half': 'Half', 'cust.method': 'How they paid', 'cust.paid': 'Payment recorded',
+  'cust.statement': 'Statement', 'cust.l_charge': 'Credit sale', 'cust.l_payment': 'Payment',
+  'cust.l_void': 'Sale cancelled', 'cust.l_adjustment': 'Adjustment', 'cust.remind': 'Write a reminder',
+  'cust.empty': 'No customers yet', 'cust.overdue': 'Overdue {n} days', 'cust.progress': '{pct}% paid back',
+  'cust.saved': 'Customer saved', 'cust.not_found': 'Customer not found',
+
+  'sales.title': 'Sales', 'sales.empty': 'No sales yet', 'sales.void': 'Void sale', 'sales.reason': 'Reason',
+  'sales.void_warning': "Stock will be returned and any unpaid amount will be removed from the customer's balance.",
+  'sales.voided': 'Voided', 'sales.void_done': 'Sale voided', 'sales.waiting': 'Waiting to sync',
+  'sales.r_mistake': 'Entered by mistake', 'sales.r_returned': 'Customer returned goods', 'sales.r_other': 'Other',
+
+  'rep.title': 'Reports', 'rep.sales': 'Sales', 'rep.profit': 'Profit', 'rep.top': 'Best sellers',
+  'rep.export': 'Export sales (CSV)', 'rep.cash_in': 'Cash in', 'rep.credit_given': 'Given on credit',
+  'rep.collected': 'Debts collected', 'rep.none': 'No sales in this period', 'rep.owner_only': 'Profit is shown to the owner only.',
+
+  'more.title': 'More', 'more.reports': 'Reports', 'more.sales': 'Sales history', 'more.team': 'Team',
+  'more.settings': 'Settings', 'more.memory': 'Assistant memory', 'more.sync': 'Sync status', 'more.sign_out': 'Sign out',
+  'more.join': 'Join a shop',
+
+  'team.title': 'Team', 'team.invite': 'Invite a cashier', 'team.code': 'Invite code',
+  'team.share': 'Share this code. It works once and expires in 48 hours.', 'team.members': 'Members',
+  'team.owner': 'Owner', 'team.cashier': 'Cashier', 'team.remove': 'Remove', 'team.owner_only': 'Only the owner can manage the team.',
+  'join.title': 'Join a shop', 'join.code': 'Invite code', 'join.cta': 'Join',
+
+  'set.title': 'Settings', 'set.shop_name': 'Shop name', 'set.negative': 'Allow selling below zero stock',
+  'set.overdue': 'Mark debts overdue after (days)', 'set.delete': 'Delete shop and all data',
+  'set.delete_warn': 'This cannot be undone. Type the shop name to confirm.', 'set.saved': 'Saved',
+  'set.owner_only': 'Only the owner can change settings.',
+
+  'sync.title': 'Sync status', 'sync.waiting': 'Waiting', 'sync.attention': 'Needs attention',
+  'sync.retry': 'Try again', 'sync.discard': 'Discard', 'sync.all_good': 'Everything is saved',
+  'sync.kind.sale': 'Sale', 'sync.kind.payment': 'Payment', 'sync.kind.stock_in': 'Restock',
+  'sync.kind.customer': 'Customer', 'sync.kind.product': 'Product', 'sync.kind.void_sale': 'Void',
+  'sync.kind.adjust_stock': 'Stock correction',
+
+  'ai.open': 'Quick entry', 'ai.title': 'Quick entry', 'ai.placeholder': 'e.g. 2 sugar to Abel on credit',
+  'ai.go': 'Understand', 'ai.draft': 'Draft. Check it, then confirm.', 'ai.discard': 'Discard',
+  'ai.which': 'Which one do you mean?', 'ai.remember': 'Remember this?', 'ai.remember_yes': 'Remember',
+  'ai.memory_empty': 'Nothing saved yet.', 'ai.memory_clear': 'Clear all', 'ai.unsupported': 'I can help with sales, payments, stock and reminders.',
+  'ai.reminder_draft': 'Reminder draft', 'ai.insights': 'Daily summary', 'ai.insights_cta': 'Get summary',
+
+  'err.STOCK_LOW': 'Not enough stock for this sale.',
+  'err.LIMIT_EXCEEDED': "This is over the customer's credit limit.",
+  'err.RATE_LIMITED': 'Too many tries. Please wait a minute.',
+  'err.FORBIDDEN': "You don't have access to this.",
+  'err.CUSTOMER_REQUIRED': 'Choose a customer for the unpaid part.',
+  'err.OVERPAYMENT': 'That is more than the amount owed.',
+  'err.VALIDATION': 'Please check the details and try again.',
+  'err.NOT_FOUND': "We couldn't find that.",
+  'err.OFFLINE': "You're offline. Your work is saved on this phone.",
+  'err.SESSION_EXPIRED': 'Please sign in again.',
+  'err.DUPLICATE': 'Already saved.',
+  'err.PRICE_CHANGED': 'A price changed. Please review this sale.',
+  'err.AI_UNAVAILABLE': "The assistant isn't available right now. You can still enter this by hand.",
+  'err.UNKNOWN': 'Something went wrong. Your work is saved on this phone. Try again.',
+
+  'v.required': 'Required', 'v.number': 'Enter a valid number', 'v.email': 'Enter a valid email',
+  'v.password': 'At least 10 characters', 'v.too_long': 'Too long',
+} as const;
+
+export type MessageKey = keyof typeof en;
+export type Messages = Record<MessageKey, string>;
