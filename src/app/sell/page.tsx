@@ -20,7 +20,7 @@ import { receiptText } from '../../domain/receipt';
 type Method = Exclude<PayMethod, 'credit'> | 'credit';
 
 export default function SellPage() {
-  const { t, money, shop, locale, toast } = useApp();
+  const { t, money, shop, toast } = useApp();
   const products = useProducts();
   const [cart, setCart] = useState<Cart>(emptyCart);
   const [q, setQ] = useState('');

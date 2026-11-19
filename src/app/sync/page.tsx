@@ -22,7 +22,7 @@ export default function SyncPage() {
               <li key={i.id} className="flex min-h-16 items-center justify-between gap-2 px-4">
                 <span><span className="block font-medium">{t(`sync.kind.${i.kind}` as MessageKey)}</span>
                   <span className="text-sm text-slate">{new Date(i.createdAt).toLocaleString()}</span>
-                  {i.lastError && <span className="block text-sm text-brick">{t(`err.${i.lastError}` as MessageKey)}</span>}</span>
+                  {i.lastErrorCode && <span className="block text-sm text-brick">{t(`err.${i.lastErrorCode}` as MessageKey)}</span>}</span>
                 {i.status === 'failed' ? (
                   <span className="flex gap-1"><Button variant="secondary" onClick={() => shop && retryItem(shop.id, i.id)}>{t('sync.retry')}</Button><Button variant="danger" onClick={() => shop && discardItem(shop.id, i.id)}>{t('sync.discard')}</Button></span>
                 ) : <Chip icon="sync">{t('sync.waiting')}</Chip>}

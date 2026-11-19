@@ -24,7 +24,7 @@ export default function ProductsPage() {
 }
 
 function ProductsInner() {
-  const { t, money, role, shop } = useApp();
+  const { t, money, role } = useApp();
   const products = useProducts();
   const params = useSearchParams();
   const [q, setQ] = useState('');

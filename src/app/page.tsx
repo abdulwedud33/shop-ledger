@@ -6,7 +6,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { AppShell } from '../components/Shell';
 import { Amount, Button, CardSkeleton, Chip, RowSkeleton, Stat } from '../components/ui';
 import { useApp } from '../lib/session';
-import { db, getMeta, setMeta } from '../lib/db';
+import { getMeta, setMeta } from '../lib/db';
 import { callAi, fetchSummary, type Summary } from '../lib/api';
 import { useBalances, useCustomers, useProducts } from '../lib/useData';
 import { rangeFor } from '../domain/dates';
