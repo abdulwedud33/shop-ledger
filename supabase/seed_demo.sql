@@ -16,11 +16,11 @@ begin
   delete from public.shops
    where id = 'e0000000-0000-0000-0000-000000000001'
       or owner_id in (select id from auth.users where email in ('demo@shopledger.et', 'cashier@shopledger.et'));
+  delete from auth.identities where user_id in ('d0000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000002');
   delete from auth.users where email in ('demo@shopledger.et', 'cashier@shopledger.et');
 end $$;
 
 -- 2. Create Auth Users with confirmed email
--- Note: Uses standard pgcrypto bf salt
 insert into auth.users (
   id,
   instance_id,
@@ -43,8 +43,8 @@ insert into auth.users (
   'demo@shopledger.et',
   extensions.crypt('Password123!', extensions.gen_salt('bf')),
   now(),
-  '{"provider":"email","providers":["email"]}',
-  '{"full_name":"Abebe Demissie (Owner)"}',
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"email":"demo@shopledger.et","email_verified":true,"full_name":"Abebe Demissie (Owner)","sub":"d0000000-0000-0000-0000-000000000001"}'::jsonb,
   now(),
   now(),
   ''
@@ -57,11 +57,43 @@ insert into auth.users (
   'cashier@shopledger.et',
   extensions.crypt('Password123!', extensions.gen_salt('bf')),
   now(),
-  '{"provider":"email","providers":["email"]}',
-  '{"full_name":"Tigist Kassa (Cashier)"}',
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"email":"cashier@shopledger.et","email_verified":true,"full_name":"Tigist Kassa (Cashier)","sub":"d0000000-0000-0000-0000-000000000002"}'::jsonb,
   now(),
   now(),
   ''
+);
+
+-- Insert corresponding auth.identities so Supabase Auth verifies credentials
+insert into auth.identities (
+  id,
+  user_id,
+  identity_data,
+  provider,
+  provider_id,
+  last_sign_in_at,
+  created_at,
+  updated_at
+) values
+(
+  'd0000000-0000-0000-0000-000000000001',
+  'd0000000-0000-0000-0000-000000000001',
+  jsonb_build_object('sub', 'd0000000-0000-0000-0000-000000000001', 'email', 'demo@shopledger.et', 'email_verified', true, 'full_name', 'Abebe Demissie (Owner)'),
+  'email',
+  'd0000000-0000-0000-0000-000000000001',
+  now(),
+  now(),
+  now()
+),
+(
+  'd0000000-0000-0000-0000-000000000002',
+  'd0000000-0000-0000-0000-000000000002',
+  jsonb_build_object('sub', 'd0000000-0000-0000-0000-000000000002', 'email', 'cashier@shopledger.et', 'email_verified', true, 'full_name', 'Tigist Kassa (Cashier)'),
+  'email',
+  'd0000000-0000-0000-0000-000000000002',
+  now(),
+  now(),
+  now()
 );
 
 -- Ensure profiles exist (handled by on_auth_user_created trigger, or fallback insert)
