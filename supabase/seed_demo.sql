@@ -9,8 +9,15 @@
 
 begin;
 
--- 1. Clean up any existing demo records
-delete from auth.users where email in ('demo@shopledger.et', 'cashier@shopledger.et');
+-- 1. Clean up any existing demo records safely
+do $$
+begin
+  perform set_config('app.shop_deletion', 'on', true);
+  delete from public.shops
+   where id = 'e0000000-0000-0000-0000-000000000001'
+      or owner_id in (select id from auth.users where email in ('demo@shopledger.et', 'cashier@shopledger.et'));
+  delete from auth.users where email in ('demo@shopledger.et', 'cashier@shopledger.et');
+end $$;
 
 -- 2. Create Auth Users with confirmed email
 -- Note: Uses standard pgcrypto bf salt
