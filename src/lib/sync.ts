@@ -136,9 +136,9 @@ export function kick(shopId: string): void {
 
 export function drainOutbox(shopId: string): Promise<void> {
   if (draining) return draining;
-  draining = (async () => {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return Promise.resolve();
+  const p = (async () => {
     try {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
       const stuck = recoverStuck(await db.outbox.where('shopId').equals(shopId).toArray(), Date.now());
       await db.outbox.bulkPut(stuck);
       for (let guard = 0; guard < 500; guard++) {
@@ -168,7 +168,8 @@ export function drainOutbox(shopId: string): Promise<void> {
       draining = null;
     }
   })();
-  return draining;
+  draining = p;
+  return p;
 }
 
 /** Throws away a failed item and refreshes from the server so local numbers match again. */
@@ -193,9 +194,9 @@ let pulling: Promise<void> | null = null;
 
 export function pullAll(shopId: string, opts: { force?: boolean; owner?: boolean } = {}): Promise<void> {
   if (pulling) return pulling;
-  pulling = (async () => {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return Promise.resolve();
+  const p = (async () => {
     try {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
       const open = await db.outbox.where('shopId').equals(shopId).filter((i) => i.status === 'pending' || i.status === 'syncing').count();
       if (open > 0) return; // do not overwrite optimistic numbers while changes are in flight
 
@@ -244,7 +245,8 @@ export function pullAll(shopId: string, opts: { force?: boolean; owner?: boolean
       pulling = null;
     }
   })();
-  return pulling;
+  pulling = p;
+  return p;
 }
 
 // ---------- lifecycle ----------

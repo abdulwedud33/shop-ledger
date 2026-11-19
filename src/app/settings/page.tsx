@@ -47,7 +47,7 @@ export default function SettingsPage() {
       </div>
       <Sheet open={del} onClose={() => setDel(false)} title={t('set.delete')} footer={<Button block variant="danger" disabled={confirmName.trim() !== shop.name} onClick={remove}>{t('set.delete')}</Button>}>
         <p className="mb-3 text-slate">{t('set.delete_warn')}</p>
-        <Field label={t('set.shop_name')} value={confirmName} onChange={(e) => setConfirmName(e.target.value)} />
+        <Field id="confirm-shop-name" label={t('set.shop_name')} value={confirmName} onChange={(e) => setConfirmName(e.target.value)} />
       </Sheet>
     </AppShell>
   );

@@ -15,6 +15,7 @@
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local > src/lib/database.types.ts",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "test:e2e": "playwright test",
     "test:node": "node --import ./scripts/ts-resolve.mjs --test tests/*/*.test.ts",
     "gen:pgtap": "python scripts/gen-pgtap.py"
   },
@@ -28,6 +29,7 @@
     "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.65.1",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
