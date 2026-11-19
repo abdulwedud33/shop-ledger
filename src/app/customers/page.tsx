@@ -34,6 +34,8 @@ export default function CustomersPage() {
       </div>
       {customers === undefined || balances === undefined ? <RowSkeleton /> : customers.length === 0 ? (
         <Empty title={t('cust.empty')} action={<Button onClick={() => setAdding(true)}>{t('cust.add')}</Button>} />
+      ) : list.length === 0 ? (
+        <p className="py-8 text-center text-slate">{t('cust.not_found')}</p>
       ) : (
         <ul className="divide-y divide-line">
           {list.map((c) => {

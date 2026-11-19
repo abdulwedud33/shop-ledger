@@ -46,7 +46,7 @@ export default function HomePage() {
   const low = (products ?? []).filter((p) => isLowStock(p.stockQty, p.reorderLevel)).slice(0, 5);
   const lowCount = (products ?? []).filter((p) => isLowStock(p.stockQty, p.reorderLevel)).length;
   const names = new Map((customers ?? []).map((c) => [c.id, c.name]));
-  const debts = [...(balances?.values() ?? [])].sort((a, b) => b.balance - a.balance);
+  const debts = [...(balances?.values() ?? [])].filter((d) => d.balance > 0).sort((a, b) => b.balance - a.balance);
   const totalOwed = debts.reduce((s, d) => s + d.balance, 0);
 
   async function getInsights() {

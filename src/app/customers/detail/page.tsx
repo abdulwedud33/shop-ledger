@@ -79,7 +79,9 @@ function Inner() {
       </section>
 
       <h2 className="px-4 text-lg font-semibold">{t('cust.statement')}</h2>
-      {ledger === undefined ? <RowSkeleton count={4} /> : (
+      {ledger === undefined ? <RowSkeleton count={4} /> : ledger.length === 0 ? (
+        <p className="px-4 py-6 text-center text-slate">{t('sales.empty')}</p>
+      ) : (
         <ul className="divide-y divide-line">
           {ledger.map((l) => (
             <li key={l.id} className="flex min-h-16 items-center justify-between px-4">

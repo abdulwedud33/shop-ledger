@@ -6,11 +6,9 @@ import { Button, Empty, Field, Sheet } from '../../components/ui';
 import { useApp } from '../../lib/session';
 import { deleteShop, updateShop } from '../../lib/api';
 import { shopNameSchema, validate } from '../../lib/schemas';
-import { wipeLocalData } from '../../lib/db';
-import { supabase } from '../../lib/supabase';
 
 export default function SettingsPage() {
-  const { t, shop, role, refreshShop, toast, errorText } = useApp();
+  const { t, shop, role, refreshShop, toast, errorText, signOut } = useApp();
   const [name, setName] = useState(shop?.name ?? '');
   const [days, setDays] = useState(String(shop?.overdueDays ?? 30));
   const [allowNeg, setAllowNeg] = useState(shop?.allowNegativeStock ?? true);
@@ -32,7 +30,7 @@ export default function SettingsPage() {
 
   async function remove() {
     if (!shop || confirmName.trim() !== shop.name) return;
-    try { await deleteShop(shop.id); await supabase.auth.signOut(); await wipeLocalData(); window.location.href = '/auth/'; }
+    try { await deleteShop(shop.id); await signOut(); window.location.href = '/auth/'; }
     catch (e) { toast(errorText(e), 'error'); }
   }
 

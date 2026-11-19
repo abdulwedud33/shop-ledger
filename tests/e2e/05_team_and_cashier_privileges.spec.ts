@@ -61,17 +61,17 @@ test.describe('Journey 6 & 7: Cashier Privilege Isolation & Report Reconciliatio
     await page.goto('/sell/');
     await page.locator('button', { hasText: 'Wheat Biscuits' }).first().click();
     await page.getByRole('button', { name: /Charge/i }).click();
+
+    const recordPromise = page.waitForResponse(/\/rpc\/record_sale/);
     await page.getByRole('button', { name: /Confirm/i }).click();
+    await recordPromise;
+
+    // Wait a brief moment for outbox applyResult to save failed status to IndexedDB
+    await page.waitForTimeout(300);
 
     // Go to Sync page to view sync status
     await page.goto('/sync/');
     await expect(page.locator('h1')).toHaveText('Sync status');
-
-    // Trigger retry to force outbox execution if still pending
-    const retryBtn = page.getByRole('button', { name: 'Try again' });
-    if (await retryBtn.isVisible()) {
-      await retryBtn.click();
-    }
 
     // Error translated into friendly language, not raw SQL or error code
     await expect(page.getByText(/price changed/i).or(page.getByText(/Failed/i))).toBeVisible({ timeout: 10000 });

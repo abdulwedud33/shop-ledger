@@ -70,6 +70,8 @@ export default function SellPage() {
 
       {products === undefined ? <TileSkeleton /> : products.length === 0 ? (
         <Empty title={t('sell.no_products')} action={<Link href="/products/" className="text-ledger underline">{t('nav.products')}</Link>} />
+      ) : tiles.length === 0 ? (
+        <p className="py-8 text-center text-slate">{t('cust.not_found')}</p>
       ) : (
         <ul className={cn('grid grid-cols-2 gap-2 p-4', count > 0 && 'pb-28')}>
           {tiles.map((p) => {

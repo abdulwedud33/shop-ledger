@@ -7,7 +7,7 @@ import { useApp } from '../../lib/session';
 import { createInvite, fetchMembers, removeMember, type MemberRow } from '../../lib/api';
 
 export default function TeamPage() {
-  const { t, shop, role, session, toast, errorText, locale } = useApp();
+  const { t, shop, role, session, toast, errorText, locale, online } = useApp();
   const [members, setMembers] = useState<MemberRow[] | null>(null);
   const [code, setCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -36,7 +36,7 @@ export default function TeamPage() {
         ) : <Button block busy={busy} onClick={invite}>{t('team.invite')}</Button>}
       </div>
       <h2 className="px-4 text-lg font-semibold">{t('team.members')}</h2>
-      {members === null ? <RowSkeleton count={3} /> : (
+      {!online && members === null ? <Empty title={t('err.OFFLINE')} /> : members === null ? <RowSkeleton count={3} /> : (
         <ul className="divide-y divide-line">
           {members.map((m) => (
             <li key={m.userId} className="flex min-h-16 items-center justify-between px-4">

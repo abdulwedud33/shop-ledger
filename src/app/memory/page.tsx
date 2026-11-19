@@ -9,7 +9,7 @@ import { deleteMemory, fetchMemory, type MemoryRow } from '../../lib/api';
 
 /** What the assistant remembers about this shop. Everything is visible, editable by deleting, and clearable. */
 export default function MemoryPage() {
-  const { t, shop, role, toast, errorText } = useApp();
+  const { t, shop, role, toast, errorText, online } = useApp();
   const [rows, setRows] = useState<MemoryRow[] | null>(null);
   const load = () => { if (shop) void fetchMemory(shop.id).then(setRows).catch((e) => toast(errorText(e), 'error')); };
   useEffect(load, [shop]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -21,7 +21,7 @@ export default function MemoryPage() {
 
   return (
     <AppShell title={t('more.memory')} back="/more/" hideAssistant>
-      {rows === null ? <RowSkeleton count={3} /> : rows.length === 0 ? <Empty title={t('ai.memory_empty')} /> : (
+      {!online && rows === null ? <Empty title={t('err.OFFLINE')} /> : rows === null ? <RowSkeleton count={3} /> : rows.length === 0 ? <Empty title={t('ai.memory_empty')} /> : (
         <>
           <ul className="divide-y divide-line">{rows.map((r) => (
             <li key={r.id} className="flex min-h-16 items-center justify-between px-4"><span><span className="block font-medium">{r.key}</span><span className="text-sm text-slate">{r.value}</span></span>

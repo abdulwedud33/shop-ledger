@@ -5,7 +5,7 @@ import { AppShell } from '../../components/Shell';
 import { Button, Chip, Empty, RowSkeleton } from '../../components/ui';
 import { useApp } from '../../lib/session';
 import { db } from '../../lib/db';
-import { discardItem, kick, retryItem } from '../../lib/sync';
+import { discardItem, retryAll, retryItem } from '../../lib/sync';
 import type { MessageKey } from '../../i18n';
 
 export default function SyncPage() {
@@ -16,7 +16,7 @@ export default function SyncPage() {
     <AppShell title={t('sync.title')} back="/more/" hideAssistant>
       {items === undefined ? <RowSkeleton count={3} /> : items.length === 0 ? <Empty title={t('sync.all_good')} /> : (
         <>
-          <div className="p-4"><Button variant="secondary" block onClick={() => shop && kick(shop.id)}>{t('sync.retry')}</Button></div>
+          <div className="p-4"><Button variant="secondary" block onClick={() => shop && retryAll(shop.id)}>{t('sync.retry')}</Button></div>
           <ul className="divide-y divide-line">
             {items.map((i) => (
               <li key={i.id} className="flex min-h-16 items-center justify-between gap-2 px-4">

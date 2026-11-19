@@ -188,6 +188,16 @@ export async function retryItem(shopId: string, id: string): Promise<void> {
   kick(shopId);
 }
 
+export async function retryAll(shopId: string): Promise<void> {
+  const items = await db.outbox.where('shopId').equals(shopId).toArray();
+  for (const item of items) {
+    if (item.status === 'failed' || item.status === 'syncing') {
+      await db.outbox.put({ ...item, status: 'pending', nextAttemptAt: Date.now() });
+    }
+  }
+  kick(shopId);
+}
+
 // ---------- pull: server -> local cache (only when nothing is waiting to be sent) ----------
 const COSTS_MAX_AGE_MS = 10 * 60_000;
 let pulling: Promise<void> | null = null;

@@ -99,6 +99,8 @@ export async function seedAppState(page: Page, data: MockData = {}) {
 
   await page.addInitScript(
     ({ session, shop, products, customers, balances, sales, ledger, outbox }) => {
+      if (typeof window !== 'undefined' && window.sessionStorage.getItem('__wiped__')) return;
+
       // 1. Set Supabase session in localStorage
       window.localStorage.setItem('sb-uuqypwwpujibxqvvvywx-auth-token', JSON.stringify(session));
       window.localStorage.setItem('sl-locale', shop.locale || 'en');

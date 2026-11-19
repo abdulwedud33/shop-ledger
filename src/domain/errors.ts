@@ -71,6 +71,7 @@ function codeFromParts(e: unknown): ErrorCode {
   // 4. Postgres / PostgREST codes (matched by code only, never by message text).
   if (dbCode === '42501') return 'FORBIDDEN'; // insufficient privilege / RLS violation
   if (dbCode === '23505') return 'DUPLICATE'; // unique violation (idempotent replay)
+  if (dbCode === '23514' || dbCode === '22P02' || dbCode === '23502' || dbCode === '22003') return 'VALIDATION';
   if (dbCode === '23514' || dbCode === '22P02' || dbCode === '23502' || dbCode === '22003' || dbCode === '22023') return 'VALIDATION';
   if (dbCode === '23503') return 'NOT_FOUND'; // foreign key
   if (dbCode === 'PGRST301' || dbCode === 'PGRST303') return 'SESSION_EXPIRED';

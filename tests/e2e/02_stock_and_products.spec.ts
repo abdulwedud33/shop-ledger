@@ -105,7 +105,7 @@ test.describe('Journey 2 & 8: Products, Stock & Settings', () => {
     await page.getByRole('dialog').getByLabel('Shop name').fill(DEFAULT_SHOP.name);
 
     // Mock delete_shop RPC
-    await page.route('**/rpc/delete_shop', (r) => r.fulfill({ status: 200, body: JSON.stringify({ ok: true }) }));
+    await page.route(/\/rpc\/delete_shop/, (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) }));
 
     await page.getByRole('dialog').getByRole('button', { name: 'Delete shop and all data' }).click();
 

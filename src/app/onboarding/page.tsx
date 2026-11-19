@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../../lib/session';
@@ -28,6 +28,17 @@ export default function OnboardingPage() {
     { name: t('ob.sample.bread'), price: '10', qty: 0 },
   ]);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (step === 1) {
+      setRows([
+        { name: t('ob.sample.sugar'), price: '120', qty: 0 },
+        { name: t('ob.sample.oil'), price: '250', qty: 0 },
+        { name: t('ob.sample.soap'), price: '40', qty: 0 },
+        { name: t('ob.sample.bread'), price: '10', qty: 0 },
+      ]);
+    }
+  }, [locale]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const update = (i: number, patch: Partial<Row>) => setRows((r) => r.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   const validRows = rows.filter((r) => r.name.trim() && parseMoney(r.price) !== null);

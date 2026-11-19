@@ -54,6 +54,8 @@ function ProductsInner() {
 
       {products === undefined ? <RowSkeleton /> : products.length === 0 ? (
         <Empty title={t('prod.empty')} action={isOwner ? <Button onClick={() => setEditing('new')}>{t('prod.empty_cta')}</Button> : undefined} />
+      ) : list.length === 0 ? (
+        <p className="py-8 text-center text-slate">{t('cust.not_found')}</p>
       ) : (
         <ul className="divide-y divide-line">
           {list.map((p) => (

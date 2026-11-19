@@ -125,8 +125,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const refreshShop = useCallback(async () => { if (userId) await loadShop(userId); }, [userId, loadShop]);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    try { await supabase.auth.signOut(); } catch { /* ignore */ }
     await wipeLocalData();
+    try {
+      localStorage.removeItem('sb-uuqypwwpujibxqvvvywx-auth-token');
+      sessionStorage.clear();
+      sessionStorage.setItem('__wiped__', '1');
+    } catch { /* ignore */ }
+    setSession(null);
     setShop(null);
   }, []);
 
