@@ -25,6 +25,15 @@ Where the build deliberately differs from the planning docs:
 - Added pgTAP tests verifying cashier cannot read `sale_item_costs` directly or via joins, cashier can safely read `customer_balances` view, and customer balance equals the sum of ledger amounts.
 - Added 10,000-case parity test (`tests/domain/money_parity.test.ts`) validating client `lineTotal` half-up rounding against PostgreSQL `round(price * qty, 2)`.
 
+## Phase 3 (Domain Logic, Offline Sync, Schemas & Integration Tests)
+
+- Tested offline outbox state machine: FIFO ordering, exponential backoff, jitter calculation, stuck item recovery after app kill, and failure classification.
+- Tested offline IndexedDB sync logic via `fake-indexeddb`: `queueSale`, `queuePayment`, `queueVoid`, `queueAdjust`, `queueStockIn`, `queueCustomer`, and `queueProduct` local state updates.
+- Verified optimistic updates preservation: `pullAll` skips remote pulls whenever the outbox has pending or syncing items.
+- Added comprehensive Zod validation test suite (`tests/lib/schemas.test.ts`) covering all 10 forms and field error mappings.
+- Added exhaustive error translation test suite (`tests/domain/errors_exhaustive.test.ts`) covering all migration-defined exceptions and Postgres SQLSTATE error codes.
+- Added live RPC integration test suite (`tests/integration/rpc_integration.test.ts`) with user signup, cross-shop isolation, idempotency replay, credit sales, payment, voiding, and report reconciliation.
+
 ## Not done yet (known gaps)
 
 - Amharic and Afaan Oromo texts are drafts and need native-speaker review before launch.

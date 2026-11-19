@@ -27,7 +27,7 @@ export interface LocalLedger {
 }
 export interface MetaRow { key: string; value: unknown }
 
-class ShopDB extends Dexie {
+export class ShopDB extends Dexie {
   meta!: Table<MetaRow, string>;
   products!: Table<LocalProduct, string>;
   customers!: Table<LocalCustomer, string>;
@@ -50,8 +50,8 @@ class ShopDB extends Dexie {
   }
 }
 
-/** Created in the browser only. Pages render after the auth gate, so it is never touched during the static build. */
-export const db: ShopDB = typeof window === 'undefined' ? (null as unknown as ShopDB) : new ShopDB();
+/** Created in the browser or test environment (indexedDB). Pages render after the auth gate, so it is never touched during the static build. */
+export const db: ShopDB = (typeof window === 'undefined' && typeof indexedDB === 'undefined') ? (null as unknown as ShopDB) : new ShopDB();
 
 export async function getMeta<T>(key: string): Promise<T | undefined> {
   return (await db.meta.get(key))?.value as T | undefined;

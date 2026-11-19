@@ -37,3 +37,17 @@ This document records deliberate deviations from the initial planning documents 
 
 6. **Remote Supabase Cloud Verification Mode:**
    - In accordance with the user's explicit directive to not use Docker and use their remote Supabase cloud project, local Docker CLI commands (`supabase start`, `supabase db reset`) are bypassed. Migrations are prepared as modular milestone files and a combined deployment script (`supabase/migrations/combined_migration.sql`).
+
+## Phase 3 Decisions
+
+1. **Dexie in Test vs Static Build Environments (`src/lib/db.ts`):**
+   - Updated `db` instantiation condition to `(typeof window === 'undefined' && typeof indexedDB === 'undefined') ? (null as unknown as ShopDB) : new ShopDB();` and exported `ShopDB`. This preserves Next.js server-side static build isolation (where both window and indexedDB are undefined) while enabling in-memory Dexie testing via `fake-indexeddb` in Node.
+
+2. **PostgreSQL Code 22023 Error Mapping (`src/domain/errors.ts`):**
+   - Added explicit mapping for SQLSTATE `22023` (invalid parameter value) to `'VALIDATION'`, ensuring that any constraint or validation failure returning 22023 maps cleanly to user-safe validation messaging.
+
+3. **Sync Engine Test Isolation:**
+   - Offline sync tests dynamically generate isolated shops (`crypto.randomUUID()`) to prevent asynchronous background outbox drain actions from polluting subsequent test state.
+
+4. **Live Integration Auth Adaptation:**
+   - Supabase Cloud enables email confirmations and strict rate limits by default. The RPC integration test (`tests/integration/rpc_integration.test.ts`) detects unconfirmed session states and outputs clear skip diagnostics guiding the user to disable email confirmations in the dashboard when running against a cloud project.
