@@ -4,6 +4,9 @@
 
 /* Tokens from DESIGN.md. RGB triplets so Tailwind can apply opacity. */
 :root {
+  --font-heading: 'Bricolage Grotesque', system-ui, -apple-system, sans-serif;
+  --font-body: 'Public Sans', system-ui, -apple-system, sans-serif;
+  --font-ethiopic: 'Noto Sans Ethiopic', 'Abyssinica SIL', system-ui, sans-serif;
   --ink: 17 32 43; --paper: 246 248 247; --surface: 255 255 255; --line: 221 227 225; --slate: 91 107 118;
   --ledger: 15 123 95; --on-ledger: 255 255 255; --owed: 199 125 0; --owed-text: 138 86 0; --brick: 179 64 47;
   color-scheme: light dark;
