@@ -44,6 +44,7 @@ raw(f"insert into public.customers (id, shop_id, name, credit_limit) values ('{C
 raw(f"insert into public.stock_movements (shop_id, product_id, type, qty_delta, created_by) values ('{SA}','{PA1}','opening',100,'{OA}'),('{SA}','{PA2}','opening',50,'{OA}'),('{SB}','{PB1}','opening',10,'{OB}')")
 raw(f"insert into public.ai_usage (shop_id, user_id, agent, ok) values ('{SA}','{OA}','insights',true)")
 raw("create temp table ctx (k text primary key, v text)")
+raw("grant usage on schema pg_temp to public")
 raw("grant all on ctx to public")
 
 TABLES = ['profiles','shops','shop_members','shop_invites','audit_log','categories','products','product_costs','stock_movements',
@@ -81,6 +82,9 @@ throws(f"select public.delete_shop('{SA}')", '42501', 'FORBIDDEN', 'owner B cann
 as_user(CA)
 eq("select count(*)::int from public.products", '2', 'cashier reads shop products')
 eq("select count(*)::int from public.product_costs", '0', 'cashier cannot read product costs')
+eq("select count(*)::int from public.sale_item_costs", '0', 'cashier cannot read sale item costs directly')
+eq("select count(*)::int from public.sale_items i join public.sale_item_costs c on c.sale_item_id = i.id", '0', 'cashier cannot read costs through joins')
+eq("select count(*)::int from public.customer_balances", '0', 'cashier can query customer balances without leaking costs')
 eq("select count(*)::int from public.audit_log", '0', 'cashier cannot read the audit log')
 eq("select count(*)::int from public.ai_usage", '0', 'cashier cannot read AI usage')
 throws(f"insert into public.products (shop_id, name, sell_price) values ('{SA}','X',1)", '42501', None, 'cashier cannot add products directly')
@@ -204,6 +208,7 @@ eq("select count(*)::int from public.product_costs", '0', 'new cashier cannot re
 as_pg()
 eq("select count(*)::int from public.products p where p.stock_qty <> coalesce((select sum(m.qty_delta) from public.stock_movements m where m.product_id = p.id), 0)", '0', 'invariant: stock equals the sum of movements')
 eq("select count(*)::int from public.sales s where s.total <> (select sum(round(i.qty * i.unit_price, 2)) from public.sale_items i where i.sale_id = s.id)", '0', 'invariant: sale total equals its items')
+eq("select count(*)::int from (select customer_id, sum(amount) as bal from public.customer_ledger group by customer_id) l join public.customer_balances b on b.customer_id = l.customer_id where b.balance <> l.bal", '0', 'invariant: customer balance equals the ledger sum')
 throws("update public.stock_movements set qty_delta = 1", '42501', 'LEDGER_IMMUTABLE', 'stock ledger is append-only (update)')
 throws("delete from public.customer_ledger", '42501', 'LEDGER_IMMUTABLE', 'customer ledger is append-only (delete)')
 throws("update public.sale_items set qty = 99", '42501', 'LEDGER_IMMUTABLE', 'sale items are immutable')

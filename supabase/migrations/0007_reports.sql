@@ -61,6 +61,7 @@ end $$;
 create function public.top_products(p_shop uuid, p_from timestamptz, p_to timestamptz, p_limit int default 5)
 returns table (product_id uuid, name text, unit text, qty numeric, revenue numeric)
 language plpgsql stable security definer set search_path = '' as $$
+#variable_conflict use_column
 begin
   if not public.is_member(p_shop) then raise exception 'FORBIDDEN' using errcode = '42501'; end if;
   perform public.rate_limit_hit('report:' || (select auth.uid()), 30, 60);
@@ -83,6 +84,7 @@ end $$;
 create function public.sales_trend(p_shop uuid, p_from timestamptz, p_to timestamptz)
 returns table (day date, sales_total numeric, sales_count int)
 language plpgsql stable security definer set search_path = '' as $$
+#variable_conflict use_column
 declare
   v_tz text;
 begin

@@ -38,7 +38,7 @@ create index product_costs_shop_idx on public.product_costs (shop_id);
 create table public.stock_movements (
   id         uuid primary key default gen_random_uuid(),
   shop_id    uuid not null references public.shops on delete cascade,
-  product_id uuid not null references public.products,
+  product_id uuid not null references public.products on delete cascade,
   type       public.stock_move_type not null,
   qty_delta  numeric(12,3) not null check (qty_delta <> 0),
   sale_id    uuid,

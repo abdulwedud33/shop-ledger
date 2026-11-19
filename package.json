@@ -16,7 +16,7 @@
     "db:types": "supabase gen types typescript --local > src/lib/database.types.ts",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build",
     "test:node": "node --import ./scripts/ts-resolve.mjs --test tests/*/*.test.ts",
-    "gen:pgtap": "python3 scripts/gen-pgtap.py"
+    "gen:pgtap": "python scripts/gen-pgtap.py"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

@@ -114,10 +114,8 @@ create policy audit_select on public.audit_log for select to authenticated
   using (public.is_owner(shop_id));
 
 -- ---------- Privileges: only what the policy matrix needs ----------
-grant select, insert, update on public.profiles to authenticated;
-revoke update on public.profiles from authenticated;
+grant select on public.profiles to authenticated;
 grant update (full_name, phone) on public.profiles to authenticated;
-revoke insert on public.profiles from authenticated;
 grant insert (id, full_name, phone) on public.profiles to authenticated;
 
 grant select on public.shops to authenticated;

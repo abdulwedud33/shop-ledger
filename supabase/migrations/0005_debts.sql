@@ -7,11 +7,11 @@
 create table public.customer_ledger (
   id          uuid primary key default gen_random_uuid(),
   shop_id     uuid not null references public.shops on delete cascade,
-  customer_id uuid not null references public.customers,
+  customer_id uuid not null references public.customers on delete cascade,
   type        public.ledger_type not null,
   amount      numeric(14,2) not null check (amount <> 0),
   method      public.pay_method,
-  sale_id     uuid references public.sales,
+  sale_id     uuid references public.sales on delete cascade,
   note        text check (char_length(note) <= 200),
   client_id   uuid,
   created_by  uuid not null references auth.users,
@@ -49,6 +49,7 @@ returns table (
   is_overdue     boolean
 )
 language plpgsql stable security invoker set search_path = '' as $$
+#variable_conflict use_column
 declare
   v_overdue int;
 begin

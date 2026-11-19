@@ -18,7 +18,7 @@ create table public.sales (
   id          uuid primary key default gen_random_uuid(),
   shop_id     uuid not null references public.shops on delete cascade,
   client_id   uuid not null,                              -- idempotency key from the device
-  customer_id uuid references public.customers,
+  customer_id uuid references public.customers on delete set null,
   total       numeric(14,2) not null check (total >= 0),
   paid_amount numeric(14,2) not null check (paid_amount >= 0),
   method      public.pay_method not null,
@@ -35,9 +35,9 @@ create index sales_customer_idx on public.sales (shop_id, customer_id, created_a
 
 create table public.sale_items (
   id         uuid primary key default gen_random_uuid(),
-  sale_id    uuid not null references public.sales,
+  sale_id    uuid not null references public.sales on delete cascade,
   shop_id    uuid not null references public.shops on delete cascade,
-  product_id uuid not null references public.products,
+  product_id uuid not null references public.products on delete cascade,
   qty        numeric(12,3) not null check (qty > 0),
   unit_price numeric(14,2) not null check (unit_price >= 0)
 );
@@ -46,14 +46,14 @@ create index sale_items_shop_idx on public.sale_items (shop_id, product_id);
 
 -- OWNER ONLY: cost snapshot at time of sale, used for profit.
 create table public.sale_item_costs (
-  sale_item_id uuid primary key references public.sale_items,
+  sale_item_id uuid primary key references public.sale_items on delete cascade,
   shop_id      uuid not null references public.shops on delete cascade,
   unit_cost    numeric(14,2) not null check (unit_cost >= 0)
 );
 create index sale_item_costs_shop_idx on public.sale_item_costs (shop_id);
 
 alter table public.stock_movements
-  add constraint stock_movements_sale_fk foreign key (sale_id) references public.sales;
+  add constraint stock_movements_sale_fk foreign key (sale_id) references public.sales on delete cascade;
 
 alter table public.customers       enable row level security;
 alter table public.sales           enable row level security;
@@ -144,33 +144,38 @@ begin
   select * into v_shop from public.shops where id = p_shop;
 
   -- Pass 1: validate, lock products in id order (no deadlocks), compute the total.
-  for v_item in
-    select (e ->> 'product_id')::uuid as product_id,
-           (e ->> 'qty')::numeric      as qty,
-           (e ->> 'unit_price')::numeric as unit_price
-      from jsonb_array_elements(p_items) e
-     order by 1
-  loop
-    if v_item.product_id is null or v_item.product_id = any (v_seen) then
-      raise exception 'VALIDATION' using errcode = '22023';
-    end if;
-    v_seen := v_seen || v_item.product_id;
-    if v_item.qty is null or v_item.qty <= 0 or v_item.qty > 999999 or v_item.qty <> round(v_item.qty, 3) then
-      raise exception 'VALIDATION' using errcode = '22023';
-    end if;
+  begin
+    for v_item in
+      select (e ->> 'product_id')::uuid as product_id,
+             (e ->> 'qty')::numeric      as qty,
+             (e ->> 'unit_price')::numeric as unit_price
+        from jsonb_array_elements(p_items) e
+       order by 1
+    loop
+      if v_item.product_id is null or v_item.product_id = any (v_seen) then
+        raise exception 'VALIDATION' using errcode = '22023';
+      end if;
+      v_seen := v_seen || v_item.product_id;
+      if v_item.qty is null or v_item.qty <= 0 or v_item.qty > 999999 or v_item.qty <> round(v_item.qty, 3) then
+        raise exception 'VALIDATION' using errcode = '22023';
+      end if;
 
-    select * into v_prod from public.products
-     where id = v_item.product_id and shop_id = p_shop and archived_at is null for update;
-    if not found then raise exception 'NOT_FOUND' using errcode = 'P0001'; end if;
+      select * into v_prod from public.products
+       where id = v_item.product_id and shop_id = p_shop and archived_at is null for update;
+      if not found then raise exception 'NOT_FOUND' using errcode = 'P0001'; end if;
 
-    v_price := coalesce(v_item.unit_price, v_prod.sell_price);
-    if v_price < 0 or v_price <> round(v_price, 2) then raise exception 'VALIDATION' using errcode = '22023'; end if;
-    if v_price <> v_prod.sell_price and not v_owner then raise exception 'PRICE_CHANGED' using errcode = 'P0001'; end if;
-    if not v_shop.allow_negative_stock and v_prod.stock_qty - v_item.qty < 0 then
-      raise exception 'STOCK_LOW' using errcode = 'P0001';
-    end if;
-    v_total := v_total + round(v_price * v_item.qty, 2);
-  end loop;
+      v_price := coalesce(v_item.unit_price, v_prod.sell_price);
+      if v_price < 0 or v_price <> round(v_price, 2) then raise exception 'VALIDATION' using errcode = '22023'; end if;
+      if v_price <> v_prod.sell_price and not v_owner then raise exception 'PRICE_CHANGED' using errcode = 'P0001'; end if;
+      if not v_shop.allow_negative_stock and v_prod.stock_qty - v_item.qty < 0 then
+        raise exception 'STOCK_LOW' using errcode = 'P0001';
+      end if;
+      v_total := v_total + round(v_price * v_item.qty, 2);
+    end loop;
+  exception
+    when invalid_text_representation or numeric_value_out_of_range then
+      raise exception 'VALIDATION' using errcode = '22023';
+  end;
 
   if v_total <= 0 then raise exception 'VALIDATION' using errcode = '22023'; end if;
   if p_paid > v_total then raise exception 'OVERPAYMENT' using errcode = 'P0001'; end if;
