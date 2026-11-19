@@ -127,8 +127,9 @@ interface Block { type: string; id?: string; name?: string; input?: Record<strin
 
 /** Calls the Messages API (Anthropic or Gemini) with tools, a hard cap on turns and tool calls, and recorded results for grounding. */
 export async function runAgent(ctx: Ctx, opts: { model: 'fast' | 'smart'; system: string; user: string; tools: Tool[]; maxTokens?: number }): Promise<string> {
-  const geminiKey = env('GEMINI_API_KEY') || (env('ANTHROPIC_API_KEY')?.startsWith('AIza') ? env('ANTHROPIC_API_KEY') : '');
-  const isGemini = Boolean(geminiKey && !env('ANTHROPIC_BASE_URL') && !env('ANTHROPIC_API_KEY')?.startsWith('sk-ant-'));
+  const antKey = env('ANTHROPIC_API_KEY') || '';
+  const geminiKey = env('GEMINI_API_KEY') || (antKey && !antKey.startsWith('sk-ant-') && !env('ANTHROPIC_BASE_URL') ? antKey : '');
+  const isGemini = Boolean(geminiKey && !env('ANTHROPIC_BASE_URL'));
 
   if (isGemini) {
     return runGeminiAgent(ctx, geminiKey, opts);
@@ -185,42 +186,54 @@ async function runAnthropicAgent(ctx: Ctx, opts: { model: 'fast' | 'smart'; syst
   throw new HttpError(502, 'AI_UNAVAILABLE');
 }
 
+interface GeminiPart {
+  text?: string;
+  functionCall?: { name: string; args?: Record<string, unknown> };
+  functionResponse?: { name: string; response: unknown };
+}
+
+interface GeminiContent {
+  role: 'user' | 'model';
+  parts: GeminiPart[];
+}
+
 async function runGeminiAgent(
   ctx: Ctx,
   key: string,
   opts: { model: 'fast' | 'smart'; system: string; user: string; tools: Tool[]; maxTokens?: number }
 ): Promise<string> {
   const model = opts.model === 'fast'
-    ? (env('AI_MODEL_FAST') || 'gemini-2.0-flash')
-    : (env('AI_MODEL_SMART') || 'gemini-2.0-flash');
-  const endpoint = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+    ? (env('AI_MODEL_FAST') || 'gemini-3-flash-preview')
+    : (env('AI_MODEL_SMART') || 'gemini-3-flash-preview');
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
 
-  const messages: Array<{ role: string; content?: string | null; tool_calls?: unknown[]; tool_call_id?: string }> = [
-    { role: 'system', content: opts.system },
-    { role: 'user', content: opts.user },
+  const contents: GeminiContent[] = [
+    { role: 'user', parts: [{ text: opts.user }] },
   ];
   let calls = 0;
 
   for (let turn = 0; turn < LIMITS.maxTurns + 1; turn++) {
     const body: Record<string, unknown> = {
-      model,
-      messages,
-      temperature: 0,
-      max_tokens: opts.maxTokens ?? 700,
+      systemInstruction: { parts: [{ text: opts.system }] },
+      contents,
+      generationConfig: {
+        temperature: 0,
+        maxOutputTokens: opts.maxTokens ?? 700,
+      },
     };
     if (opts.tools.length > 0) {
-      body.tools = opts.tools.map(({ name, description, input_schema }) => ({
-        type: 'function',
-        function: { name, description, parameters: input_schema },
-      }));
+      body.tools = [{
+        functionDeclarations: opts.tools.map(({ name, description, input_schema }) => ({
+          name,
+          description,
+          parameters: input_schema,
+        })),
+      }];
     }
 
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'authorization': `Bearer ${key}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(25_000),
     });
@@ -228,41 +241,36 @@ async function runGeminiAgent(
     if (!res.ok) throw new HttpError(502, 'AI_UNAVAILABLE');
 
     const data = await res.json() as {
-      choices?: Array<{ message: { role: string; content?: string | null; tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }> } }>;
-      usage?: { prompt_tokens?: number; completion_tokens?: number };
+      candidates?: Array<{ content?: { role: 'user' | 'model'; parts: GeminiPart[] } }>;
+      usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
     };
 
-    ctx.tokensIn += data.usage?.prompt_tokens ?? 0;
-    ctx.tokensOut += data.usage?.completion_tokens ?? 0;
+    ctx.tokensIn += data.usageMetadata?.promptTokenCount ?? 0;
+    ctx.tokensOut += data.usageMetadata?.candidatesTokenCount ?? 0;
 
-    const msg = data.choices?.[0]?.message;
-    if (!msg) throw new HttpError(502, 'AI_UNAVAILABLE');
+    const candidate = data.candidates?.[0]?.content;
+    const parts = candidate?.parts ?? [];
+    const functionCalls = parts.filter((p) => p.functionCall);
 
-    const toolCalls = msg.tool_calls ?? [];
-    if (toolCalls.length === 0) {
-      return msg.content ?? '';
+    if (functionCalls.length === 0) {
+      return parts.filter((p) => p.text).map((p) => p.text).join('\n');
     }
 
     if (turn >= LIMITS.maxTurns) break;
 
-    messages.push(msg);
+    contents.push(candidate!);
 
-    for (const tc of toolCalls) {
+    const responseParts: GeminiPart[] = [];
+    for (const p of functionCalls) {
+      const fc = p.functionCall!;
       calls++;
-      let input: Record<string, unknown> = {};
-      try {
-        input = typeof tc.function.arguments === 'string' ? JSON.parse(tc.function.arguments) : (tc.function.arguments || {});
-      } catch {
-        input = {};
-      }
-
       let result: unknown;
-      const tool = opts.tools.find((t) => t.name === tc.function.name);
+      const tool = opts.tools.find((t) => t.name === fc.name);
       if (calls > LIMITS.maxToolCalls || !tool) {
         result = { error: 'TOOL_LIMIT' };
       } else {
         try {
-          result = await tool.run(input);
+          result = await tool.run(fc.args ?? {});
         } catch {
           result = { error: 'TOOL_FAILED' };
         }
@@ -270,12 +278,15 @@ async function runGeminiAgent(
       ctx.results.push(result);
       collectIds(result, ctx.seen);
 
-      messages.push({
-        role: 'tool',
-        tool_call_id: tc.id,
-        content: `<untrusted_data name="tool_result">${JSON.stringify(result)}</untrusted_data>`,
+      responseParts.push({
+        functionResponse: {
+          name: fc.name,
+          response: { result },
+        },
       });
     }
+
+    contents.push({ role: 'user', parts: responseParts });
   }
 
   throw new HttpError(502, 'AI_UNAVAILABLE');
