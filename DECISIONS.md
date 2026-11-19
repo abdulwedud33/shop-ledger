@@ -57,3 +57,11 @@ This document records deliberate deviations from the initial planning documents 
 1. **Reporting Functions Volatility (`0007_reports.sql`):**
    - Marked `dashboard_summary`, `top_products`, and `sales_trend` as `volatile` rather than `stable` because each function invokes `perform public.rate_limit_hit(...)`, which performs an `INSERT` into `public.rate_limits`.
    - In PostgreSQL and PostgREST, invoking a `stable` function via RPC executes within a read-only transaction, which rejected the rate limit hit with SQLSTATE `25006` (`cannot execute INSERT in a read-only transaction`). Marking them `volatile` grants read-write transaction capability.
+
+2. **Google Gemini Native Tool Calling Bridge in Edge Functions (`supabase/functions/_shared/runtime.ts`):**
+   - Anthropic Claude requires paid API credits, and OpenAI-compatible endpoints on Google AI Studio experienced 503 rate/load limits.
+   - Extended Edge Functions runtime to detect Gemini keys (prefixed with `AIza` or `AQ.`) and call Google's native `/v1beta/models/gemini-3-flash-preview:generateContent` API directly, translating JSON schemas into Gemini function declarations and converting function call responses back into unified tool output.
+
+3. **Local-First Optimistic Home Dashboard Sales Aggregation (`src/app/page.tsx`):**
+   - In a local-first PWA, sales recorded on device reside in local Dexie IndexedDB (`db.sales`) and sync outbox. Relying strictly on remote RPC `dashboard_summary` meant that home dashboard stats (today's sales total, sales count, and cash in) showed 0 or old numbers until a remote sync round-trip finished.
+   - Updated `src/app/page.tsx` with a reactive `useLiveQuery` on `db.sales` for today's non-voided sales, computing `Math.max(summary?.salesTotal ?? 0, localSalesTotal)` so numbers update instantly on the home screen upon completing a sale.

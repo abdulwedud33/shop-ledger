@@ -80,6 +80,12 @@ Where the build deliberately differs from the planning docs:
 - Conducted npm dependency audit (`npm audit`).
 - Produced `TEST_REPORT.md`, updated `CHECKLIST.md` for human operator tasks, and created `MANUAL_QA.md` for real-device field testing.
 
+## Phase 9 (Gemini Native AI Provider & Instant Local Dashboard Feedback)
+
+- Implemented Google Gemini native API integration (`AQ.` and `AIza` keys) using `gemini-3-flash-preview` and direct function calling in Supabase Edge Functions (`supabase/functions/_shared/runtime.ts`).
+- Added `auth.identities` insertions to `supabase/seed_demo.sql` so pre-seeded demo credentials (`demo@shopledger.et`, `cashier@shopledger.et`) authenticate seamlessly against GoTrue without requiring confirmation emails.
+- Updated `src/app/page.tsx` with a reactive `useLiveQuery` on `db.sales` for instant local sales aggregation (`Math.max(summary, local)`), ensuring today's sales total, cash in, and transaction count update immediately on the Home screen upon checkout without waiting for remote server round-trips.
+
 ## Not done yet (known gaps)
 
 - Amharic and Afaan Oromo texts are drafts and need native-speaker review before launch.

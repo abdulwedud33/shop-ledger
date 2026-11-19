@@ -6,7 +6,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { AppShell } from '../components/Shell';
 import { Amount, Button, CardSkeleton, Chip, RowSkeleton, Stat } from '../components/ui';
 import { useApp } from '../lib/session';
-import { getMeta, setMeta } from '../lib/db';
+import { db, getMeta, setMeta } from '../lib/db';
 import { callAi, fetchSummary, type Summary } from '../lib/api';
 import { useBalances, useCustomers, useProducts } from '../lib/useData';
 import { rangeFor } from '../domain/dates';
@@ -49,6 +49,20 @@ export default function HomePage() {
   const debts = [...(balances?.values() ?? [])].filter((d) => d.balance > 0).sort((a, b) => b.balance - a.balance);
   const totalOwed = debts.reduce((s, d) => s + d.balance, 0);
 
+  const localTodaySales = useLiveQuery(async () => {
+    if (!shop) return [];
+    const all = await db.sales.where('shopId').equals(shop.id).toArray();
+    return all.filter((s) => s.status !== 'voided' && s.createdAt >= range.from && s.createdAt < range.to);
+  }, [shop?.id, range.from, range.to]);
+
+  const localSalesTotal = localTodaySales?.reduce((sum, s) => sum + s.total, 0) ?? 0;
+  const localSalesCount = localTodaySales?.length ?? 0;
+  const localCashIn = localTodaySales?.reduce((sum, s) => sum + s.paid, 0) ?? 0;
+
+  const displaySalesTotal = Math.max(summary?.salesTotal ?? 0, localSalesTotal);
+  const displaySalesCount = Math.max(summary?.salesCount ?? 0, localSalesCount);
+  const displayCashIn = Math.max(summary?.cashIn ?? 0, localCashIn);
+
   async function getInsights() {
     if (!shop) return;
     setAiBusy(true);
@@ -65,15 +79,15 @@ export default function HomePage() {
         <h2 className="px-4 pt-4 text-sm font-medium text-slate">{t('home.today')}</h2>
         {!summary && loading ? <CardSkeleton /> : (
           <div className="grid grid-cols-2 gap-3 p-4">
-            <Stat label={t('home.sales')} value={money(summary?.salesTotal ?? 0)} />
-            <Stat label={t('home.cash_in')} value={money(summary?.cashIn ?? 0)} tone="in" />
+            <Stat label={t('home.sales')} value={money(displaySalesTotal)} />
+            <Stat label={t('home.cash_in')} value={money(displayCashIn)} tone="in" />
             <Stat label={t('home.owed')} value={money(summary?.totalOwed ?? totalOwed)} tone="owed" />
             {role === 'owner'
               ? <Stat label={t('home.profit')} value={money(summary?.profit ?? 0)} tone="in" />
               : <Stat label={t('home.low_title')} value={String(summary?.lowStockCount ?? lowCount)} />}
           </div>
         )}
-        {summary && <p className="px-4 text-sm text-slate">{t('home.sales_count', { n: summary.salesCount })}</p>}
+        <p className="px-4 text-sm text-slate">{t('home.sales_count', { n: displaySalesCount })}</p>
       </section>
 
       {(lowCount > 0 || totalOwed > 0) && (
