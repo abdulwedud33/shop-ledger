@@ -7,7 +7,7 @@ import { isUuid, parseJsonLoose, sanitizeInput, looksLikeInjection } from '../_s
 const FIELDS = ['product', 'customer', 'quantity', 'payment', 'other'];
 const LANG: Record<string, string> = { en: 'English', am: 'Amharic', om: 'Afaan Oromo' };
 
-serve('entry_parser', async (ctx: Ctx, body) => {
+export const handler = serve('entry_parser', async (ctx: Ctx, body) => {
   const sentence = sanitizeInput(body.sentence, 300);
   if (!sentence) return { status: 'unsupported', draft: null, clarifications: [], memorySuggestion: null, note: null };
   if (looksLikeInjection(sentence)) console.warn('injection-pattern'); // metric only; defenses do not depend on this
@@ -49,3 +49,5 @@ serve('entry_parser', async (ctx: Ctx, body) => {
   }
   return { status, draft: null, clarifications: status === 'needs_clarification' ? clarifications : [], memorySuggestion: null, note: typeof out.note === 'string' ? out.note.slice(0, 140) : null };
 });
+
+export default handler;

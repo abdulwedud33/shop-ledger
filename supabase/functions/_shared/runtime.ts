@@ -1,6 +1,12 @@
 // Shared runtime for the AI Edge Functions (Deno). Secrets come only from function secrets, never from the client.
-import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { LIMITS, isUuid } from './guardrails.ts';
+
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined;
+  };
+} | undefined;
 
 export class HttpError extends Error {
   status: number;
@@ -18,14 +24,19 @@ export interface Ctx {
   tokensIn: number; tokensOut: number;
 }
 
-const env = (k: string) => Deno.env.get(k) ?? '';
-const allowed = () => env('ALLOWED_ORIGINS').split(',').map((s) => s.trim()).filter(Boolean);
+const env = (k: string) => (typeof Deno !== 'undefined' ? Deno.env.get(k) : process.env[k]) || (k === 'SUPABASE_URL' ? (typeof Deno !== 'undefined' ? Deno.env.get('NEXT_PUBLIC_SUPABASE_URL') : process.env.NEXT_PUBLIC_SUPABASE_URL) : k === 'SUPABASE_ANON_KEY' ? (typeof Deno !== 'undefined' ? Deno.env.get('NEXT_PUBLIC_SUPABASE_ANON_KEY') : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) : '') || '';
+const allowed = () => {
+  const raw = env('ALLOWED_ORIGINS');
+  if (!raw) return ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:4173', 'http://127.0.0.1:4173'];
+  return raw.split(',').map((s: string) => s.trim()).filter(Boolean);
+};
 
 function cors(req: Request): Record<string, string> {
   const origin = req.headers.get('Origin') ?? '';
-  const ok = allowed().includes(origin);
+  const allowedList = allowed();
+  const ok = allowedList.includes('*') || (origin && allowedList.includes(origin));
   return {
-    'Access-Control-Allow-Origin': ok ? origin : 'null',
+    'Access-Control-Allow-Origin': ok ? (allowedList.includes('*') ? (origin || '*') : origin) : 'null',
     'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Vary': 'Origin',
@@ -37,9 +48,8 @@ const json = (req: Request, status: number, body: unknown) =>
 
 export type Agent = 'entry_parser' | 'insights' | 'reminder';
 
-/** Wraps an agent handler with CORS, size limit, auth, kill switch, rate limits, budget and safe errors. */
-export function serve(agent: Agent, handler: (ctx: Ctx, body: Record<string, unknown>) => Promise<unknown>) {
-  Deno.serve(async (req) => {
+export function createHandler(agent: Agent, handler: (ctx: Ctx, body: Record<string, unknown>) => Promise<unknown>) {
+  return async (req: Request): Promise<Response> => {
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(req) });
     let ctx: Ctx | null = null;
     let ok = false;
@@ -67,7 +77,18 @@ export function serve(agent: Agent, handler: (ctx: Ctx, body: Record<string, unk
         await ctx.admin.from('ai_usage').insert({ shop_id: ctx.shopId, user_id: ctx.userId, agent, input_tokens: ctx.tokensIn, output_tokens: ctx.tokensOut, ok }).then(() => {}, () => {});
       }
     }
-  });
+  };
+}
+
+/** Wraps an agent handler with CORS, size limit, auth, kill switch, rate limits, budget and safe errors. */
+export function serve(agent: Agent, handler: (ctx: Ctx, body: Record<string, unknown>) => Promise<unknown>) {
+  const reqHandler = createHandler(agent, handler);
+  // @ts-ignore Deno global in edge runtime
+  if (typeof Deno !== 'undefined' && typeof Deno.serve === 'function') {
+    // @ts-ignore
+    Deno.serve(reqHandler);
+  }
+  return reqHandler;
 }
 
 async function authenticate(req: Request): Promise<Ctx> {
@@ -107,13 +128,15 @@ interface Block { type: string; id?: string; name?: string; input?: Record<strin
 /** Calls the Messages API with tools, a hard cap on turns and tool calls, and recorded results for grounding. */
 export async function runAgent(ctx: Ctx, opts: { model: 'fast' | 'smart'; system: string; user: string; tools: Tool[]; maxTokens?: number }): Promise<string> {
   const model = opts.model === 'fast' ? (env('AI_MODEL_FAST') || 'claude-haiku-5-5') : (env('AI_MODEL_SMART') || 'claude-sonnet-5-5');
-  const key = env('ANTHROPIC_API_KEY');
+  const baseUrl = env('ANTHROPIC_BASE_URL') || 'https://api.anthropic.com';
+  const endpoint = `${baseUrl.replace(/\/+$/, '')}/v1/messages`;
+  const key = env('ANTHROPIC_API_KEY') || (env('ANTHROPIC_BASE_URL') ? 'mock-key' : '');
   if (!key) throw new HttpError(503, 'AI_UNAVAILABLE');
   const messages: { role: string; content: unknown }[] = [{ role: 'user', content: opts.user }];
   let calls = 0;
 
   for (let turn = 0; turn < LIMITS.maxTurns + 1; turn++) {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({

@@ -6,7 +6,7 @@ import { collectNumbers, isUuid, parseJsonLoose, sanitizeInput, ungroundedNumber
 
 const LANG: Record<string, string> = { en: 'English', am: 'Amharic', om: 'Afaan Oromo' };
 
-serve('insights', async (ctx: Ctx, body) => {
+export const handler = serve('insights', async (ctx: Ctx, body) => {
   if (ctx.role !== 'owner') throw new HttpError(403, 'FORBIDDEN');
   const period = ['today', 'week', 'month'].includes(String(body.period)) ? String(body.period) : 'today';
   const prefs = (await ctx.client.from('shop_memory').select('key, value').eq('shop_id', ctx.shopId).eq('kind', 'preference').limit(10)).data ?? [];
@@ -37,3 +37,5 @@ serve('insights', async (ctx: Ctx, body) => {
     unavailable: (Array.isArray(out.unavailable) ? out.unavailable : []).slice(0, 4).map((u) => String(u).slice(0, 60)),
   };
 });
+
+export default handler;

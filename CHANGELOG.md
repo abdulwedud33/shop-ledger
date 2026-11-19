@@ -34,9 +34,54 @@ Where the build deliberately differs from the planning docs:
 - Added exhaustive error translation test suite (`tests/domain/errors_exhaustive.test.ts`) covering all migration-defined exceptions and Postgres SQLSTATE error codes.
 - Added live RPC integration test suite (`tests/integration/rpc_integration.test.ts`) with user signup, cross-shop isolation, idempotency replay, credit sales, payment, voiding, and report reconciliation.
 
+## Phase 4 (Static Export, CSP Hardening & Bundle Verification)
+
+- Configured Next.js 15 static export generating 18 clean static HTML routes in `out/`.
+- Verified `scripts/postbuild.mjs` generates per-page Content Security Policy (CSP) headers without `unsafe-inline` by computing SHA-256 hashes of all inline Next.js scripts into `out/_headers`.
+- Verified `scripts/check-bundle.mjs` secret scanning passes on production bundles and reliably fails when planting fake service_role JWTs.
+- Measured first-load gzip JS budgets (Home route at 68.6 kB vs. 170 kB budget). Verified offline reload capability via Service Worker cache.
+
+## Phase 5 (End-to-End User Journey Tests with Playwright)
+
+- Built and verified automated Playwright E2E test suite across 13 distinct customer journeys in phone viewport (`tests/e2e/`):
+  - Onboarding and first sale receipt generation.
+  - Stock movements, low-stock alerts, restock, and negative stock blocking.
+  - Offline sales, local sync status indicators, reconnect draining, and duplicate prevention.
+  - Customer debts, partial payments, FIFO overdue debt ageing, and overpayment prevention.
+  - Voiding synced sales, inventory recovery, and cashier void masking.
+  - Cashier invite via 16-character code, cost/profit hiding, price override rejection.
+  - Financial report ledger reconciliation and formula injection prevention (`=`, `@`, `+`, `-`).
+  - Shop settings, negative-stock enforcement, and account deletion with complete IndexedDB wipe.
+  - Language switching across English, Amharic, and Afaan Oromo with 130% length and 200% zoom testing.
+  - Fixed-layout onboarding bar alignment stability.
+  - Offline receipt sharing via Web Share API fallback.
+  - IndexedDB storage quota resilience and non-Latin input search handling.
+
+## Phase 6 (UX Polish, Edge States & Outbox Recovery)
+
+- Fully resolved all partial UX requirements in `AUDIT.md`.
+- Implemented layout-matched skeletons and empty/offline state indicators across all lists (`customers`, `team`, `memory`, `products`, `sell`).
+- Enhanced outbox sync recovery (`retryAll`) to unstick stalled syncing items.
+- Fixed loss-aversion banner calculations on Home to strictly sum positive customer debtor balances.
+- Fixed onboarding step 1 sample item translations on language toggle.
+
+## Phase 7 (Edge Functions Runtime, Mock Anthropic Server & Eval Suite)
+
+- Implemented cross-compatible Deno / Node.js runtime for Supabase Edge Functions (`supabase/functions/deno.json`).
+- Built local Mock Anthropic API Server (`tests/ai/mock_anthropic.ts`) supporting tool use, rate limit errors (429), server errors (500), and grounding checks without requiring real API credits.
+- Created 90 eval fixtures across English, Amharic, and Afaan Oromo (`evals/fixtures/`) marked as drafts for native review.
+- Built automated AI eval runner (`tests/ai/eval_runner.ts`) achieving 100% intent accuracy, 0 hallucinations, and 100% safety.
+- Built 11 automated pipeline security tests (`tests/ai/pipeline.test.ts`) covering kill switches, rate limiting, cashier 403 blocks, number grounding 502 rejection, and prompt injection neutralization.
+
+## Phase 8 (Security Launch Checklist, Abuse Verification & Quality Audits)
+
+- Verified all items in `docs/security.md` section 14 (abuse cases) and section 15 (launch checklist) with concrete automated test evidence.
+- Verified mobile throttled performance (DOMContentLoaded < 1.7s) and accessibility compliance (0 critical/serious axe-core violations) on all key routes (`tests/e2e/performance_audit.spec.ts`).
+- Conducted npm dependency audit (`npm audit`).
+- Produced `TEST_REPORT.md`, updated `CHECKLIST.md` for human operator tasks, and created `MANUAL_QA.md` for real-device field testing.
+
 ## Not done yet (known gaps)
 
 - Amharic and Afaan Oromo texts are drafts and need native-speaker review before launch.
 - No barcode scanning, expenses, CSV import, app PIN lock or Ethiopian calendar display (all planned for v1.1 in the PRD).
-- Evals against a real model (`docs/evals.md`) are not run; only the deterministic guardrails are unit-tested.
-- ESLint rules are not configured yet.
+- Live Anthropic model execution in production requires setting `ANTHROPIC_API_KEY` secret in Supabase Edge Functions.

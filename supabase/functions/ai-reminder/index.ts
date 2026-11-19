@@ -7,7 +7,7 @@ import { isSafeReminder, isUuid, parseJsonLoose } from '../_shared/guardrails.ts
 const LANG: Record<string, string> = { en: 'English', am: 'Amharic', om: 'Afaan Oromo' };
 const TONES = ['friendly', 'neutral', 'formal'];
 
-serve('reminder', async (ctx: Ctx, body) => {
+export const handler = serve('reminder', async (ctx: Ctx, body) => {
   if (ctx.role !== 'owner') throw new HttpError(403, 'FORBIDDEN');
   if (!isUuid(body.customerId)) throw new HttpError(400, 'VALIDATION');
   const tone = TONES.includes(String(body.tone)) ? String(body.tone) : 'friendly';
@@ -30,3 +30,5 @@ serve('reminder', async (ctx: Ctx, body) => {
     tone,
   };
 });
+
+export default handler;
