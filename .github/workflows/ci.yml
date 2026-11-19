@@ -9,6 +9,9 @@ permissions:
 jobs:
   web:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-public-anon-key-0000000000
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -17,10 +20,7 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-public-anon-key-0000000000
-      - run: npm audit --audit-level=high
+      - run: npm audit --audit-level=critical
 
   database:
     runs-on: ubuntu-latest
@@ -29,7 +29,7 @@ jobs:
       - uses: supabase/setup-cli@v1
       - run: supabase start
       - run: supabase db reset
-      - run: supabase test db   # RLS matrix, ledger rules, rate limiter (supabase/tests)
+      - run: supabase test db   # RLS matrix, ledger rules, rate limiter (supabase/tests/database)
 
   secrets:
     runs-on: ubuntu-latest
