@@ -34,12 +34,12 @@ token_refresh = 150
 
 [functions.ai-parse-entry]
 verify_jwt = true
-import_map = "supabase/functions/import_map.json"
+import_map = "functions/import_map.json"
 
 [functions.ai-insights]
 verify_jwt = true
-import_map = "supabase/functions/import_map.json"
+import_map = "functions/import_map.json"
 
 [functions.ai-reminder]
 verify_jwt = true
-import_map = "supabase/functions/import_map.json"
+import_map = "functions/import_map.json"
