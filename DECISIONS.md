@@ -51,3 +51,9 @@ This document records deliberate deviations from the initial planning documents 
 
 4. **Live Integration Auth Adaptation:**
    - Supabase Cloud enables email confirmations and strict rate limits by default. The RPC integration test (`tests/integration/rpc_integration.test.ts`) detects unconfirmed session states and outputs clear skip diagnostics guiding the user to disable email confirmations in the dashboard when running against a cloud project.
+
+## Post-Phase 8 Decisions
+
+1. **Reporting Functions Volatility (`0007_reports.sql`):**
+   - Marked `dashboard_summary`, `top_products`, and `sales_trend` as `volatile` rather than `stable` because each function invokes `perform public.rate_limit_hit(...)`, which performs an `INSERT` into `public.rate_limits`.
+   - In PostgreSQL and PostgREST, invoking a `stable` function via RPC executes within a read-only transaction, which rejected the rate limit hit with SQLSTATE `25006` (`cannot execute INSERT in a read-only transaction`). Marking them `volatile` grants read-write transaction capability.
